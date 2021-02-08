@@ -1,0 +1,36 @@
+FROM debian:stretch-slim
+
+ENV http_proxy=http://192.168.1.200:8080
+ENV https_proxy=http://192.168.1.200:8080
+RUN apt update \
+    && apt install -y \
+        build-essential \
+        curl \
+        libpcre3-dev \
+        zlib1g-dev \
+        libssl-dev
+
+RUN rm -rf /var/lib/apt/lists/*
+
+RUN curl -L https://nginx.org/download/nginx-1.19.6.tar.gz | tar xz
+
+RUN curl -L https://github.com/chobits/ngx_http_proxy_connect_module/archive/master.tar.gz | tar xz
+
+RUN cd nginx-1.19.6 \
+    && patch -p1 < ../ngx_http_proxy_connect_module-master/patch/proxy_connect_rewrite_1018.patch \
+    && ./configure --add-module=../ngx_http_proxy_connect_module-master \
+    && make \
+    && make install \
+    && cd .. \
+    && rm -rf nginx-1.19.6 ngx_http_proxy_connect_module-master
+
+ENV http_proxy=
+ENV https_proxy=
+
+COPY ./nginx.forward.conf /usr/local/nginx/conf/nginx.conf
+
+EXPOSE 3128
+
+STOPSIGNAL SIGTERM
+
+CMD [ "/usr/local/nginx/sbin/nginx", "-g", "daemon off;" ]

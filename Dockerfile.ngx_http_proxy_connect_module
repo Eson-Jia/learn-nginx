@@ -27,7 +27,7 @@ RUN cd nginx-1.19.6 \
 ENV http_proxy=
 ENV https_proxy=
 
-COPY ./nginx.forward.conf /usr/local/nginx/conf/nginx.conf
+COPY ./nginx.conf /usr/local/nginx/conf/nginx.conf
 
 EXPOSE 3128
 
